@@ -172,6 +172,8 @@ Rigging, final art direction, and quality control remain human-centered.
 
 ## Development
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+
 Run tests:
 
 ```bash
@@ -199,3 +201,7 @@ python -m visible_layers.cli demo --output demo-output
 ## License
 
 MIT License.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
