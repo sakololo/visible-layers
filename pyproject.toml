@@ -37,8 +37,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/your-name/visible-layers"
-Issues = "https://github.com/your-name/visible-layers/issues"
+Homepage = "https://github.com/sakololo/visible-layers"
+Issues = "https://github.com/sakololo/visible-layers/issues"
 
 [project.scripts]
 visible-layers = "visible_layers.cli:main"
