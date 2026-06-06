@@ -4,6 +4,28 @@ All notable changes to Visible Layers will be documented in this file.
 
 The project follows a simple semantic versioning style while it is early-stage.
 
+## v0.1.1 - Import Validation Reports
+
+Adds validation reports for imported PNG layer folders.
+
+### Added
+
+- `import-layers` now writes a human-readable Markdown report to `import-report.md`.
+- `import-layers` now writes a machine-readable JSON report to `import-report.json`.
+- Added import checks for empty layers, mismatched canvas sizes, very low visible pixel coverage, unknown layer categories, and possible hidden-region repair needs.
+- Added `--report-md` and `--report-json` options for custom report output paths.
+- Added tests for import report analysis, Markdown output, JSON output, and invalid import handling.
+
+### Changed
+
+- README now documents the import validation report workflow and expected output files.
+- `import-layers` now stops before metadata export when validation finds structural errors, while still writing the report files for inspection.
+
+### Validation
+
+- `python -m unittest discover -s tests`
+- 18 tests passing locally
+
 ## v0.1.0 - Manual Mask And Layer Import MVP
 
 Initial public MVP.
