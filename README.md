@@ -67,7 +67,19 @@ Import existing layers from another tool or manual workflow:
 visible-layers import-layers --layers path/to/png-layers --output output
 ```
 
-This copies the PNG layers into `output/layers/`, writes `output/character.json`, creates `output/preview.png`, and runs gap detection into `output/gaps/`.
+This copies the PNG layers into `output/layers/`, writes `output/character.json`, creates `output/preview.png`, writes `output/import-report.md` and `output/import-report.json`, and runs gap detection into `output/gaps/`.
+
+The import report checks structural issues such as layer count, canvas size consistency, empty layers, very low visible coverage, filename-based category inference, and possible hidden-region repair needs.
+
+You can also choose custom report paths:
+
+```bash
+visible-layers import-layers \
+  --layers path/to/png-layers \
+  --output output \
+  --report-md output/import-report.md \
+  --report-json output/import-report.json
+```
 
 Prepare:
 
@@ -105,6 +117,9 @@ visible-layers detect-gaps --metadata output/character.json --output output/gaps
 ```text
 output/
   character.json
+  import-report.md
+  import-report.json
+  preview.png
   layers/
     00_body_base.png
     01_face_base.png

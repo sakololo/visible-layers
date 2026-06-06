@@ -10,6 +10,13 @@ from .demo import create_demo
 from .gaps import detect_gaps
 from .layers import import_layer_folder, split_layers
 from .preview import save_preview
+from .reports import (
+    add_import_report_finding,
+    analyze_layer_folder,
+    render_import_report_summary,
+    write_import_report_json,
+    write_import_report_markdown,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -30,6 +37,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     import_parser.add_argument("--layers", required=True, help="Directory containing transparent PNG layers.")
     import_parser.add_argument("--output", required=True, help="Output directory.")
+    import_parser.add_argument(
+        "--report-md",
+        help="Path for the Markdown import validation report. Defaults to output/import-report.md.",
+    )
+    import_parser.add_argument(
+        "--report-json",
+        help="Path for the JSON import validation report. Defaults to output/import-report.json.",
+    )
     import_parser.add_argument(
         "--skip-gaps",
         action="store_true",
@@ -76,17 +91,63 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Wrote preview to {args.output}")
             return 0
         if args.command == "import-layers":
+            output_directory = Path(args.output)
+            report_md_path = Path(args.report_md) if args.report_md else output_directory / "import-report.md"
+            report_json_path = (
+                Path(args.report_json) if args.report_json else output_directory / "import-report.json"
+            )
+            import_report = analyze_layer_folder(args.layers)
+            if import_report["summary"]["error_count"]:
+                write_import_report_markdown(import_report, report_md_path)
+                write_import_report_json(import_report, report_json_path)
+                print(render_import_report_summary(import_report))
+                print(f"Wrote import report to {report_md_path}")
+                print(f"Wrote import report JSON to {report_json_path}")
+                raise ValueError(
+                    f"Import validation failed with {import_report['summary']['error_count']} error(s)."
+                )
+
             metadata = import_layer_folder(args.layers, args.output)
-            metadata_path = Path(args.output) / "character.json"
-            preview_path = Path(args.output) / "preview.png"
-            save_preview(metadata_path, preview_path)
-            print(f"Wrote {len(metadata['layers'])} imported layers to {Path(args.output) / 'layers'}")
+            metadata_path = output_directory / "character.json"
+            preview_path = output_directory / "preview.png"
+            try:
+                save_preview(metadata_path, preview_path)
+                import_report["summary"]["preview_generated"] = True
+            except Exception as exc:
+                add_import_report_finding(
+                    import_report,
+                    "error",
+                    "PREVIEW_FAILED",
+                    f"Preview generation failed: {exc}",
+                )
+                write_import_report_markdown(import_report, report_md_path)
+                write_import_report_json(import_report, report_json_path)
+                raise
+
+            print(f"Wrote {len(metadata['layers'])} imported layers to {output_directory / 'layers'}")
             print(f"Wrote metadata to {metadata_path}")
             print(f"Wrote preview to {preview_path}")
             if not args.skip_gaps:
-                report = detect_gaps(metadata_path, Path(args.output) / "gaps")
-                print(f"Wrote gap mask to {report['mask']}")
-                print(f"Wrote report to {report['report']}")
+                try:
+                    gap_report = detect_gaps(metadata_path, Path(args.output) / "gaps")
+                except Exception as exc:
+                    add_import_report_finding(
+                        import_report,
+                        "error",
+                        "GAP_REPORT_FAILED",
+                        f"Gap report generation failed: {exc}",
+                    )
+                    write_import_report_markdown(import_report, report_md_path)
+                    write_import_report_json(import_report, report_json_path)
+                    raise
+                import_report["summary"]["gap_report_generated"] = True
+                print(f"Wrote gap mask to {gap_report['mask']}")
+                print(f"Wrote report to {gap_report['report']}")
+            write_import_report_markdown(import_report, report_md_path)
+            write_import_report_json(import_report, report_json_path)
+            print(render_import_report_summary(import_report))
+            print(f"Wrote import report to {report_md_path}")
+            print(f"Wrote import report JSON to {report_json_path}")
             return 0
         if args.command == "detect-gaps":
             report = detect_gaps(args.metadata, args.output, alpha_threshold=args.alpha_threshold)
